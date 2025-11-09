@@ -1,0 +1,6 @@
+base_url = "https://stellarburgers.education-services.ru"
+create_change_user_data_url_or_delete = f"{base_url}/api/auth/user"
+create_order_url = f"{base_url}/api/orders"
+create_user_url = f"{base_url}/api/auth/register"
+get_orders_url = f"{base_url}/api/orders"
+login_user_url = f"{base_url}/api/auth/login"
