@@ -1,6 +1,5 @@
 import requests
 import allure
-from helpers import help_script
 from data import urls
 from data import response_text
 
@@ -14,10 +13,9 @@ class TestGetOrders_from_user:
     )
     @allure.feature("Проверка получения заказов конкретного пользователя")
     @allure.severity("High")
-    def test_get_orders_from_user_with_auth(self):
+    def test_get_orders_from_user_with_auth(self, create_order):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
-        number, name_burger, status = help_script.create_order(token)
+        order_number, order_name, order_status, token, email, name, password = create_order
 
         with allure.step(
             "Отправляем запрос на получение заказов конкретного пользователя"
@@ -27,18 +25,15 @@ class TestGetOrders_from_user:
                 urls.get_orders_url, headers={"Authorization": token}
             )
 
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
-
         # Выполняем проверки
         assert response.status_code == 200
         assert response.json()["success"] == True
         assert response.json()["orders"] != None
         orders = response.json()["orders"]
         first_order = orders[0]
-        assert first_order["number"] == number
-        assert first_order["name"] == name_burger
-        assert first_order["status"] == status
+        assert first_order["number"] == order_number
+        assert first_order["name"] == order_name
+        assert first_order["status"] == order_status
 
     @allure.title(
         "Проверка получения заказов конкретного пользователя. Пользователь неавторизован"
