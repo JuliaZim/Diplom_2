@@ -1,16 +1,8 @@
 import requests
 import allure
-from helpers import help_script
 from data import urls
 from data import data
 from data import response_text
-
-
-"""с авторизацией,
-без авторизации,
-с ингредиентами,
-без ингредиентов,
-с неверным хешем ингредиентов."""
 
 
 class TestCreateOrder:
@@ -18,9 +10,9 @@ class TestCreateOrder:
     @allure.description(f"Проверка апи создания заказа: {urls.create_order_url}")
     @allure.feature("Проверка создания заказа")
     @allure.severity("High")
-    def test_create_order_with_ingredients_with_auth(self):
+    def test_create_order_with_ingredients_with_auth(self, create_and_login_user):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
+        email, password, name, token = create_and_login_user
 
         with allure.step('Отправляем запрос на создание заказа'):
         # Выполняем шаги
@@ -28,9 +20,6 @@ class TestCreateOrder:
             response = requests.post(
                 urls.create_order_url, headers={"Authorization": token}, data=payload
             )
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
 
         # Выполняем прооверки
         assert response.status_code == 200
@@ -42,9 +31,9 @@ class TestCreateOrder:
     @allure.description(f"Проверка апи создания заказа: {urls.create_order_url}")
     @allure.feature("Проверка создания заказа")
     @allure.severity("High")
-    def test_create_order_without_ingredients_with_auth(self):
+    def test_create_order_without_ingredients_with_auth(self, create_and_login_user):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
+        email, password, name, token = create_and_login_user
 
         with allure.step('Отправляем запрос на создание заказа'):
         # Выполняем шаги
@@ -52,10 +41,6 @@ class TestCreateOrder:
             response = requests.post(
                 urls.create_order_url, headers={"Authorization": token}, data=payload
             )
-
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
 
         # Выполняем прооверки
         assert response.status_code == 400
@@ -87,9 +72,9 @@ class TestCreateOrder:
     @allure.description(f"Проверка апи создания заказа: {urls.create_order_url}")
     @allure.feature("Проверка создания заказа")
     @allure.severity("High")
-    def test_create_order_with_incorrect_ingredients_with_auth(self):
+    def test_create_order_with_incorrect_ingredients_with_auth(self, create_and_login_user):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
+        email, password, name, token = create_and_login_user
 
         with allure.step('Отправляем запрос на создание заказа'):
         # Выполняем шаги
@@ -97,10 +82,6 @@ class TestCreateOrder:
             response = requests.post(
                 urls.create_order_url, headers={"Authorization": token}, data=payload
             )
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
-
         # Выполняем прооверки
         assert response.status_code == 500
         assert response_text.order_with_incorrect_ingredients in response.text

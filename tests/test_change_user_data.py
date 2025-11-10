@@ -1,10 +1,8 @@
 import requests
 import pytest
 import allure
-from helpers import help_script
 from data import urls
 from faker import Faker
-from data import data
 from data import response_text
 
 fake = Faker()
@@ -17,21 +15,18 @@ class TestChangeUserData:
     )
     @allure.feature("Проверка изменения данных юзера")
     @allure.severity("High")
-    def test_change_user_name_success(self):
+    def test_change_user_name_success(self, create_and_login_user, update_name_data):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
+        email, password, name, token = create_and_login_user
 
         # Выполняем шаги
-        payload = data.update_name_data
+        payload = update_name_data
         with allure.step("Отправляем запрос на изменение данных юзера"):
             response = requests.patch(
                 urls.create_change_user_data_url_or_delete,
                 headers={"Authorization": token},
                 data=payload,
             )
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(payload["name"], email, token)
 
         # Выполняем прооверки
         assert response.status_code == 200
@@ -45,21 +40,18 @@ class TestChangeUserData:
     )
     @allure.feature("Проверка изменения данных юзера")
     @allure.severity("High")
-    def test_change_user_email_success(self):
+    def test_change_user_email_success(self, create_and_login_user, update_email_data):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
+        email, password, name, token = create_and_login_user
 
         with allure.step("Отправляем запрос на изменение данных юзера"):
             # Выполняем шаги
-            payload = data.update_email_data
+            payload = update_email_data
             response = requests.patch(
                 urls.create_change_user_data_url_or_delete,
                 headers={"Authorization": token},
                 data=payload,
             )
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, payload["email"], token)
 
         # Выполняем прооверки
         assert response.status_code == 200
@@ -73,22 +65,18 @@ class TestChangeUserData:
     )
     @allure.feature("Проверка изменения данных юзера")
     @allure.severity("High")
-    def test_change_user_password_success(self):
+    def test_change_user_password_success(self, create_and_login_user, update_password_data):
         # Предусловие. Создаем пользователя и логинимся
-        email, password, name, token = help_script.create_and_login_user()
+        email, password, name, token = create_and_login_user
 
         with allure.step("Отправляем запрос на изменение данных юзера"):
             # Выполняем шаги
-            payload = data.update_password_data
+            payload = update_password_data
             response = requests.patch(
                 urls.create_change_user_data_url_or_delete,
                 headers={"Authorization": token},
                 data=payload,
             )
-
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
 
         # Выполняем проверки
         assert response.status_code == 200
@@ -102,17 +90,18 @@ class TestChangeUserData:
     @allure.feature("Проверка изменения данных юзера")
     @allure.severity("High")
     @pytest.mark.parametrize(
-        "update_data",
+        ("payload", "title_case"),
         [
-            (data.update_email_data, "Проверка изменения email без авторизации"),
-            (data.update_name_data, "Проверка изменения email без авторизации"),
-            (data.update_password_data, "Проверка изменения email без авторизации"),
+            ("update_email_data", "Проверка изменения email без авторизации"),
+            ("update_name_data", "Проверка изменения email без авторизации"),
+            ("update_password_data", "Проверка изменения email без авторизации"),
         ],
+        ids = ["email", "name", "password"],
+        indirect=["payload"]
     )
-    def test_change_user_password_if_user_unauth(self, update_data):
+    def test_change_user_password_if_user_unauth(self, payload, title_case):
         with allure.step("Отправляем запрос на изменение данных юзера"):
             # Выполняем шаги
-            payload, title_case = update_data
             allure.dynamic.title(title_case)
             response = requests.patch(
                 urls.create_change_user_data_url_or_delete, data=payload

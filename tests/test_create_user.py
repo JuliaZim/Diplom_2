@@ -1,7 +1,5 @@
 import requests
-import pytest
 import allure
-from helpers import help_script
 from data import urls, response_text
 from faker import Faker
 
@@ -14,15 +12,12 @@ class TestCreateUser:
     @allure.description(f"Проверка апи создания юзера: {urls.create_user_url}")
     @allure.feature("Проверка создания клиента")
     @allure.severity("High")
-    def test_create_user_success(self):
+    def test_create_user_success(self, create_user):
         # Создание юзера
-        email, password, name, create_response, status_code = help_script.create_user()
+        email, password, name, create_response, status_code = create_user
 
         # Забираем токен
         token = create_response["accessToken"]
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
 
         # Выполняем проверки
         assert status_code == 200
@@ -36,9 +31,9 @@ class TestCreateUser:
     @allure.description(f"Проверка апи создания юзера: {urls.create_user_url}")
     @allure.feature("Проверка создания клиента")
     @allure.severity("Medium")
-    def test_create_user_which_exist(self):
+    def test_create_user_which_exist(self, create_user):
         # Предусловие. Создаем пользователя
-        email, password, name, create_response, status_code = help_script.create_user()
+        email, password, name, create_response, status_code = create_user
         # Забираем токен
         token = create_response["accessToken"]
 
@@ -47,46 +42,63 @@ class TestCreateUser:
             payload = {"name": name, "email": email, "password": password}
             response = requests.post(urls.create_user_url, data=payload)
 
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
-
         # Выполняем проверки
         assert response.status_code == 403
         assert response.json()["success"] == False
         assert response.json()["message"] == response_text.user_exist_response
 
+    @allure.title("Проверка логина без имени")
     @allure.description(f"Проверка апи создания юзера: {urls.create_user_url}")
     @allure.feature("Проверка создания клиента")
     @allure.severity("Low")
-    @pytest.mark.parametrize(
-        "create_user_data",
-        [
-            (
-                "",
-                fake.email(),
-                fake.password(),
-                "Проверка создания пользователя: Отсутствует имя",
-            ),
-            (
-                fake.name(),
-                "",
-                fake.password(),
-                "Проверка создания пользователя: Отсутствует email",
-            ),
-            (
-                fake.name(),
-                fake.email(),
-                "",
-                "Проверка создания пользователя: Отсутствует пароль",
-            ),
-        ],
-    )
-    def test_create_user_without_required_value(self, create_user_data):
+    def test_create_user_without_name_value(self, fake):
+        email = fake.email()
+        password = fake.password()
         # Выполняем шаги
         with allure.step('Отправляем запрос на создание пользователя без обязательных параметров'):
-            name, email, password, title_case = create_user_data
-            allure.dynamic.title(title_case)
-            payload = {"name": name, "email": email, "password": password}
+            payload = {"name": "", "email": email, "password": password}
+            response = requests.post(urls.create_user_url, data=payload)
+
+        # Выполняем проверки
+        assert response.status_code == 403
+        assert response.json()["success"] == False
+        assert (
+            response.json()["message"]
+            == response_text.create_user_required_field_response
+        )
+
+
+    @allure.title("Проверка логина без email")
+    @allure.description(f"Проверка апи создания юзера: {urls.create_user_url}")
+    @allure.feature("Проверка создания клиента")
+    @allure.severity("Low")
+    def test_create_user_without_email_value(self, fake):
+        name = fake.name()
+        password = fake.password()
+        # Выполняем шаги
+        with allure.step('Отправляем запрос на создание пользователя без обязательных параметров'):
+            payload = {"name": name, "email": "", "password": password}
+            response = requests.post(urls.create_user_url, data=payload)
+
+        # Выполняем проверки
+        assert response.status_code == 403
+        assert response.json()["success"] == False
+        assert (
+            response.json()["message"]
+            == response_text.create_user_required_field_response
+        )
+
+    @allure.title("Проверка логина без пароля")
+    @allure.description(f"Проверка апи создания юзера: {urls.create_user_url}")
+    @allure.feature("Проверка создания клиента")
+    @allure.severity("Low")
+    def test_create_user_without_password_value(self, fake):
+        name = fake.name()
+        email = fake.email()
+
+        # Выполняем шаги
+        with allure.step('Отправляем запрос на создание пользователя без обязательных параметров'):
+            payload = {"name": name, "email": email, "password": ""}
             response = requests.post(urls.create_user_url, data=payload)
 
         # Выполняем проверки

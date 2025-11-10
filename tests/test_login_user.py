@@ -3,7 +3,7 @@ import pytest
 import allure
 from data import urls
 from data import response_text
-from helpers import help_script
+
 
 
 class TestLoginUser:
@@ -11,9 +11,9 @@ class TestLoginUser:
     @allure.description(f"Проверка апи логина юзера: {urls.create_user_url}")
     @allure.feature("Проверка логина")
     @allure.severity("High")
-    def test_login_with_exist_logpas(self):
+    def test_login_with_exist_logpas(self, create_user):
         # Предусловие. Создаем юзера
-        email, password, name, create_response, status_code = help_script.create_user()
+        email, password, name, create_response, status_code = create_user
         token = create_response["accessToken"]
 
         with allure.step("Отправляем запрос на логин пользователя"):
@@ -29,9 +29,6 @@ class TestLoginUser:
         assert response_value["refreshToken"] != None
         assert response_value["user"]["email"] == email
         assert response_value["user"]["name"] != None
-
-        # Постусловия. Удаляем юзера
-        help_script.delete_user(name, email, token)
 
     @allure.description("Проверка апи логина юзера: {urls.create_user_url}")
     @allure.feature("Проверка логина")
